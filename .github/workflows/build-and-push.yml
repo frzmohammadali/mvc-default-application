@@ -10,7 +10,7 @@ jobs:
   build-test-docker:
     runs-on: ubuntu-latest
     env:
-      PROJECT_PATH: mvc-default-application/mvc-default-application
+      PROJECT_PATH: mvc-default-application
       DOCKER_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/mvc-default-application
       DOTNET_VERSION: '9.0.x'  # Adjust if you're not on .NET 9
 
