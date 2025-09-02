@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.TAG_VERSION }} -t ${{ env.DOCKER_IMAGE }}:latest -f ${{ env.PROJECT_PATH }}/Dockerfile .
+          docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.TAG_VERSION }} -t ${{ env.DOCKER_IMAGE }}:latest -f ${{ env.PROJECT_PATH }}/Dockerfile ./${{ env.PROJECT_PATH }}
 
       - name: Push Docker images
         run: |
