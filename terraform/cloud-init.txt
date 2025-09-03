@@ -40,7 +40,7 @@ runcmd:
   - sleep 5
 
   # start minikube using the "none" driver (runs kubelet on the host), run as root
-  - /usr/local/bin/minikube start --driver=none --kubernetes-version=v1.28.0 || true
+  - /usr/local/bin/minikube start --kubernetes-version=v1.28.0 || true
 
   # allow kubectl to access cluster
   - mkdir -p /root/.kube
