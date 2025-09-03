@@ -35,3 +35,13 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      # Save state for destroy workflow
+      - name: Upload Terraform State
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state
+          path: |
+            ./terraform/.terraform
+            ./terraform/.terraform.lock.hcl
+            ./terraform/terraform.tfstate

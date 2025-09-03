@@ -16,6 +16,13 @@ jobs:
         with:
           terraform_version: '1.5.7'
 
+      # Restore state from apply workflow
+      - name: Download Terraform State
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-state
+          path: ./terraform
+
       - name: Azure Login
         uses: azure/login@v1
         with:
