@@ -13,6 +13,8 @@ jobs:
       PROJECT_PATH: mvc-default-application
       DOCKER_IMAGE: ${{ secrets.DOCKER_HUB_USERNAME }}/mvc-default-application
       DOTNET_VERSION: '9.0.x'
+    outputs:
+      tag_version: ${{ steps.extract_version.outputs.tag_version }}
 
     steps:
       - name: Checkout repository
@@ -39,8 +41,8 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Extract version from tag
-        id: vars
-        run: echo "TAG_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        id: extract_version
+        run: echo "tag_version=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         run: |
@@ -114,6 +116,14 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform
         run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Get VM IP
+        id: set_outputs
+        working-directory: terraform
+        run: |
+          VM_IP=$(terraform output -raw vm_public_ip)
+          echo "VM_IP=$VM_IP"
+          echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
 
       # Save state for destroy workflow
       - name: Upload Terraform State
