@@ -121,11 +121,7 @@ jobs:
         id: set_outputs
         working-directory: terraform
         run: |
-          TMPXX=$(terraform output -raw vm_public_ip)
-          TMPYY=$(terraform output -raw vm_public_ip | cut -d':' -f1)
-          echo $TMPXX
-          echo $TMPYY
-          VM_IP=$(terraform output -raw vm_public_ip | cut -d':' -f1)
+          VM_IP=$(terraform output vm_public_ip | cut -d':' -f1 | tr -d '\r\n')
           echo "VM_IP=$VM_IP"
           echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
 
