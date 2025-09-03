@@ -83,7 +83,6 @@ jobs:
       #       failed on ref **${{ github.ref_name }}**.
       #       Please check the logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-
   terraform-apply:
     name: Terraform Plan & Apply
     runs-on: ubuntu-latest
@@ -104,27 +103,61 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        working-directory: ./terraform
+        working-directory: terraform
         run: terraform init
 
       - name: Terraform Plan
-        working-directory: ./terraform
-        run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -out=tfplan
+        working-directory: terraform
+        run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
+        continue-on-error: true
 
       - name: Terraform Apply
-        working-directory: ./terraform
-        run: terraform apply -auto-approve -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
-            -var="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
-            -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
-            -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
-            -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+        working-directory: terraform
+        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      - name: Read outputs
-        working-directory: ./terraform
-        id: set_outputs
-        run: |
-          VM_IP=$(terraform output -raw vm_public_ip)
-          echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
+      # Save state for destroy workflow
+      - name: Upload Terraform State
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state
+          path: |
+            ./terraform/.terraform
+            ./terraform/.terraform.lock.hcl
+            ./terraform/terraform.tfstate
+
+  terraform-destroy:
+    needs: terraform-apply
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    environment: production-destroy   # Require manual approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.5.7'
+
+      # Restore state from apply workflow
+      - name: Download Terraform State
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-state
+          path: ./terraform
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: terraform
+        run: terraform destroy -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
   deploy-to-minikube:
     name: Deploy to Minikube
