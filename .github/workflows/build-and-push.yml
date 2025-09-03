@@ -173,7 +173,7 @@ jobs:
     name: Deploy to Minikube
     runs-on: ubuntu-latest
     needs: [build-test-docker, terraform-apply]
-    environment: production-destroy   # Require manual approval
+    environment: production-deploy   # Require manual approval
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -191,10 +191,12 @@ jobs:
           ADMIN_USER: ${{ secrets.TF_ADMIN_USERNAME || 'azureuser' }}
         run: |
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./k8s/* $ADMIN_USER@$VM_IP:/tmp/
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $ADMIN_USER@$VM_IP bash -s <<'EOF'
-            set -e
-            sed -i "s|IMAGE_PLACEHOLDER|${IMAGE}|g" /tmp/deployment.yaml
-            kubectl apply -f /tmp/deployment.yaml
-            kubectl apply -f /tmp/service.yaml
-            kubectl rollout status deployment/mvc-app --timeout=120s
-            kubectl get svc mvc-app-service -o wide
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $ADMIN_USER@$VM_IP bash -s <<EOF
+              set -e
+              IMAGE="${IMAGE}"
+              sed -i "s|IMAGE_PLACEHOLDER|$IMAGE|g" /tmp/deployment.yaml
+              kubectl apply -f /tmp/deployment.yaml
+              kubectl apply -f /tmp/service.yaml
+              kubectl rollout status deployment/mvc-app --timeout=120s
+              kubectl get svc mvc-app-service -o wide
+          EOF
