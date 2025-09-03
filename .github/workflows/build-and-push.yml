@@ -122,8 +122,9 @@ jobs:
         working-directory: terraform
         run: |
           VM_IP=$(terraform output vm_public_ip | cut -d':' -f1 | tr -d '\r\n')
-          echo "VM_IP=$VM_IP"
-          echo "vm_ip=$VM_IP" >> $GITHUB_OUTPUT
+          VM_IP2=$(VM_IP | grep -oP '"\K[^"]+')
+          echo "VM_IP=$VM_IP2"
+          echo "vm_ip=$VM_IP2" >> $GITHUB_OUTPUT
 
       # Save state for destroy workflow
       - name: Upload Terraform State
