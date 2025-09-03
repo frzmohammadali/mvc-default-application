@@ -34,7 +34,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
       - name: Read outputs
         working-directory: terraform
